@@ -52,54 +52,57 @@ void getPara(mypara &mpara)
 	mpara.neibormethod = param["neibormethod"];
 }
 
-void greedy_triangle(const pcl::PointCloud<pcl::PointXYZ>::Ptr &cloudin, pcl::PolygonMesh &triangles, mypara &paraall)
-{
-	// Normal estimation*
-	pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> n;
-	pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
-	pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
-	tree->setInputCloud(cloudin);
-	n.setInputCloud(cloudin);
-	n.setSearchMethod(tree);
-	n.setKSearch(paraall.KSearchnum);
-	n.compute(*normals);
-	//* normals should not contain the point normals + surface curvatures
-
-	// Concatenate the XYZ and normal fields*
-	pcl::PointCloud<pcl::PointNormal>::Ptr cloud_with_normals(new pcl::PointCloud<pcl::PointNormal>);
-	pcl::concatenateFields(*cloudin, *normals, *cloud_with_normals);
-	//* cloud_with_normals = cloud + normals
-
-	// Create search tree*
-	pcl::search::KdTree<pcl::PointNormal>::Ptr tree2(new pcl::search::KdTree<pcl::PointNormal>);
-	tree2->setInputCloud(cloud_with_normals);
-
-	// Initialize objects
-
-	pcl::GreedyProjectionTriangulation<pcl::PointNormal> gp3;
-
-	//三角化网格
-
-	// Set the maximum distance between connected points (maximum edge length)
-	gp3.setSearchRadius(paraall.SearchRadius);//设置连接点之间的最大距离（即为三角形最大边长）为0.025
-	// Set typical values for the parameters
-	gp3.setMu(paraall.mu); // 设置被样本点搜索其邻近点的最远距离为2.5，为了适应点云密度的变化
-	gp3.setMaximumNearestNeighbors(paraall.maxneibors);//设置样本点可搜索的邻域个数为100
-	gp3.setMaximumSurfaceAngle(M_PI * paraall.maxsurangle*1.0 / 180.0);   //设置某点法线方向偏离样本点法线方向的最大角度为
-	gp3.setMinimumAngle(M_PI * paraall.minangle*1.0 / 180); // //设置三角化后得到三角形内角最小角度为10度
-	gp3.setMaximumAngle(M_PI * paraall.maxangle*1.0 / 180);  //设置三角化后得到三角形内角最大角度为120度
-	if (paraall.norConsis != "fales")
-		gp3.setNormalConsistency(true);
-	else
-		gp3.setNormalConsistency(false);
-	// Get result
-	gp3.setInputCloud(cloud_with_normals);
-	gp3.setSearchMethod(tree2);
-	gp3.reconstruct(triangles);
-	// Additional vertex information
-	std::vector<int> parts = gp3.getPartIDs();
-	std::vector<int> states = gp3.getPointStates();
-}
+//template<typename T>
+//void greedy_triangle(const T &cloudinori, pcl::PolygonMesh &triangles, mypara &paraall)
+//{
+//	pcl::PointCloud<pcl::PointXYZ>::Ptr cloudin(new pcl::PointCloud<pcl::PointXYZ>);
+//	pcl::copyPointCloud(T, cloudin);
+//	// Normal estimation*
+//	pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> n;
+//	pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
+//	pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
+//	tree->setInputCloud(cloudin);
+//	n.setInputCloud(cloudin);
+//	n.setSearchMethod(tree);
+//	n.setKSearch(paraall.KSearchnum);
+//	n.compute(*normals);
+//	//* normals should not contain the point normals + surface curvatures
+//
+//	// Concatenate the XYZ and normal fields*
+//	pcl::PointCloud<pcl::PointNormal>::Ptr cloud_with_normals(new pcl::PointCloud<pcl::PointNormal>);
+//	pcl::concatenateFields(*cloudin, *normals, *cloud_with_normals);
+//	//* cloud_with_normals = cloud + normals
+//
+//	// Create search tree*
+//	pcl::search::KdTree<pcl::PointNormal>::Ptr tree2(new pcl::search::KdTree<pcl::PointNormal>);
+//	tree2->setInputCloud(cloud_with_normals);
+//
+//	// Initialize objects
+//
+//	pcl::GreedyProjectionTriangulation<pcl::PointNormal> gp3;
+//
+//	//三角化网格
+//
+//	// Set the maximum distance between connected points (maximum edge length)
+//	gp3.setSearchRadius(paraall.SearchRadius);//设置连接点之间的最大距离（即为三角形最大边长）为0.025
+//	// Set typical values for the parameters
+//	gp3.setMu(paraall.mu); // 设置被样本点搜索其邻近点的最远距离为2.5，为了适应点云密度的变化
+//	gp3.setMaximumNearestNeighbors(paraall.maxneibors);//设置样本点可搜索的邻域个数为100
+//	gp3.setMaximumSurfaceAngle(M_PI * paraall.maxsurangle*1.0 / 180.0);   //设置某点法线方向偏离样本点法线方向的最大角度为
+//	gp3.setMinimumAngle(M_PI * paraall.minangle*1.0 / 180); // //设置三角化后得到三角形内角最小角度为10度
+//	gp3.setMaximumAngle(M_PI * paraall.maxangle*1.0 / 180);  //设置三角化后得到三角形内角最大角度为120度
+//	if (paraall.norConsis != "fales")
+//		gp3.setNormalConsistency(true);
+//	else
+//		gp3.setNormalConsistency(false);
+//	// Get result
+//	gp3.setInputCloud(cloud_with_normals);
+//	gp3.setSearchMethod(tree2);
+//	gp3.reconstruct(triangles);
+//	// Additional vertex information
+//	std::vector<int> parts = gp3.getPartIDs();
+//	std::vector<int> states = gp3.getPointStates();
+//}
 
 void getcolormesh(const pcl::PolygonMesh &triangles1, const pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud1_RGB,
 	pcl::PolygonMesh &meshout)
@@ -328,8 +331,9 @@ void getInterference(const pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud1, const Tr
 	}
 }
 
+//获得三角面片附近的三角面片，以三角面片的中心为准
 void getCenNeiborTri(const pcl::PointCloud<PointXYZ>::Ptr &cloud1,const pcl::PointCloud<PointXYZ>::Ptr &cloud2,
-	vector<MyTriangles> &cloud1_cen_tri, vector<MyTriangles> &cloud2_cen_tri)
+	vector<MyTriangles> &cloud1_cen_tri, vector<MyTriangles> &cloud2_cen_tri, const mypara &parall)
 {
 	for (int i = 0; i < cloud1->size(); i++)
 	{
@@ -343,7 +347,7 @@ void getCenNeiborTri(const pcl::PointCloud<PointXYZ>::Ptr &cloud1,const pcl::Poi
 		std::vector<float> kddis;
 		pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
 		tree->setInputCloud(tempcloud);
-		if(tree->radiusSearch(temppoint, 0.025, kdID, kddis)>0)
+		if(tree->radiusSearch(temppoint, parall.SearchRadius, kdID, kddis)>0)
 		{
 			for (int j = 1; j < kdID.size(); j++)
 			{
@@ -355,6 +359,193 @@ void getCenNeiborTri(const pcl::PointCloud<PointXYZ>::Ptr &cloud1,const pcl::Poi
 				tempvertall.push_back(tempvert);
 			}
 		}
-		cloud1_cen_tri.at(i).CrossVertices = tempvertall;
+		cloud1_cen_tri.at(i).NeiborVertices = tempvertall;
+	}
+}
+
+
+//hash编码函数
+string Vertices2str(const pcl::Vertices &p)
+{
+	std::stringstream in;
+	in << p.vertices[0] << " " << p.vertices[1] << " " << p.vertices[2] << endl;
+	return in.str();
+}
+
+void str2Vertices(const string &ss, pcl::Vertices &p)
+{
+	string num;
+	int i = 0;
+	std::stringstream in(ss);
+	while (in >> num)
+	{
+		int ptemp;
+		stringstream numsrt;
+		numsrt << num;
+		numsrt >> ptemp;
+		if (num != " ")
+		{
+			p.vertices.push_back(ptemp);
+		}
+	}
+}
+
+//检查相交等情况
+void ray_triangle(const vector<MyTriangles> &cloud1_cen_tri, const pcl::PointCloud<PointXYZRGB>::Ptr &cloud1in, 
+	const pcl::PointCloud<PointXYZRGB>::Ptr & cloud2in,	map<string,vector<pcl::Vertices>> &sameCross, 
+	map<string, vector<pcl::Vertices>> &twosideCross, map<string, vector<pcl::Vertices>> &parallmap)
+{
+	for (int i = 0; i < cloud1_cen_tri.size(); i++)
+	{
+		string oristr = Vertices2str(cloud1_cen_tri.at(i).TriVerts);
+		auto p1 = cloud1in->at(cloud1_cen_tri.at(i).TriVerts.vertices[0]);//三角面的第一个点
+		auto p2 = cloud1in->at(cloud1_cen_tri.at(i).TriVerts.vertices[1]);//三角面的第一个点
+		auto p3 = cloud1in->at(cloud1_cen_tri.at(i).TriVerts.vertices[2]);//三角面的第一个点
+		for (int j = 0; j < cloud1_cen_tri.at(i).NeiborVertices.size(); j++)
+		{
+			vector<pcl::Vertices>parallset;
+			vector<pcl::Vertices>cross1sideset;
+			vector<pcl::Vertices>cross2sideset;
+			auto v0 = cloud2in->at(cloud1_cen_tri.at(i).NeiborVertices.at(j).vertices[0]);
+			auto v1 = cloud2in->at(cloud1_cen_tri.at(i).NeiborVertices.at(j).vertices[1]);
+			auto v2 = cloud2in->at(cloud1_cen_tri.at(i).NeiborVertices.at(j).vertices[2]);
+			Raytri p1p2(p1, p2, v0, v1, v2);
+			Raytri p1p3(p1, p3, v0, v1, v2);
+			Raytri p2p3(p2, p3, v0, v1, v2);
+			//如果三边都为0,说明该cloud2的该三角面片平行于cloud1的对于三角面片，
+			//那么将其加入对于的三角面片容器中
+			if (intersect_triangle(p1p2) == 3 && intersect_triangle(p1p3) == 3 && intersect_triangle(p2p3) == 3)
+			{
+				break;
+			}
+			else if((intersect_triangle(p1p2) == 3 && intersect_triangle(p1p3) == 3 && intersect_triangle(p2p3) == 0)
+				|| (intersect_triangle(p1p2) == 3 && intersect_triangle(p1p3) == 0 && intersect_triangle(p2p3) == 3)
+				|| (intersect_triangle(p1p2) == 0 && intersect_triangle(p1p3) == 3 && intersect_triangle(p2p3) == 3))
+			{
+				break;
+			}
+			else if (intersect_triangle(p1p2) == 0 && intersect_triangle(p1p3) == 0
+				&& intersect_triangle(p2p3) == 0)
+			{
+				parallset.push_back(cloud1_cen_tri.at(i).NeiborVertices.at(j));
+			}
+			else if (intersect_triangle(p1p2) == 1 && intersect_triangle(p1p3) == 1 && intersect_triangle(p2p3) == 1)
+			{
+				cross1sideset.push_back(cloud1_cen_tri.at(i).NeiborVertices.at(j));
+			}
+			else
+			{
+				cross2sideset.push_back(cloud1_cen_tri.at(i).NeiborVertices.at(j));
+			}
+			sameCross[oristr] = cross1sideset;
+			twosideCross[oristr] = cross2sideset;
+			parallmap[oristr] = parallset;
+		}
+	}
+}
+
+//以视点为准
+//void adjustCrossCloud(const pcl::PointCloud<PointXYZRGB>::Ptr &cloud1, 
+//	pcl::PointCloud<PointXYZRGB>::Ptr &cloud2, const pcl::PointXYZ &viewpoint, 
+//	pcl::Vertices &Ver1, pcl::Vertices &Ver2)
+//{
+//	//舒适化分别为点云2视点，点云2的三角面片对应点，点云1三角面三个顶点
+//	Raytri rtcloud2p1(viewpoint, cloud2->at(Ver2.vertices[0]), cloud1->at(Ver1.vertices[0])
+//		, cloud1->at(Ver1.vertices[1]), cloud1->at(Ver1.vertices[2]));
+//	Raytri rtcloud2p2(viewpoint, cloud2->at(Ver2.vertices[1]), cloud1->at(Ver1.vertices[0])
+//		, cloud1->at(Ver1.vertices[1]), cloud1->at(Ver1.vertices[2]));
+//	Raytri rtcloud2p3(viewpoint, cloud2->at(Ver2.vertices[2]), cloud1->at(Ver1.vertices[0])
+//		, cloud1->at(Ver1.vertices[1]), cloud1->at(Ver1.vertices[2]));
+//	pcl::PointXYZRGB p1, p2, p3;
+//	if (getCrossPoint(rtcloud2p1, p1) == 0)
+//	{
+//		cloud2->at(Ver2.vertices[0]).x = p1.x;
+//		cloud2->at(Ver2.vertices[0]).y = p1.y;
+//		cloud2->at(Ver2.vertices[0]).z = p1.z;
+//	}
+//	if (getCrossPoint(rtcloud2p2, p2) == 0)
+//	{
+//		cloud2->at(Ver2.vertices[1]).x = p1.x;
+//		cloud2->at(Ver2.vertices[1]).y = p1.y;
+//		cloud2->at(Ver2.vertices[1]).z = p1.z;
+//	}
+//	if (getCrossPoint(rtcloud2p3, p3) == 0)
+//	{
+//		cloud2->at(Ver2.vertices[2]).x = p1.x;
+//		cloud2->at(Ver2.vertices[2]).y = p1.y;
+//		cloud2->at(Ver2.vertices[2]).z = p1.z;
+//	}
+//}
+
+
+//不以视点为准
+void adjustCrossCloud(const pcl::PointCloud<PointXYZRGB>::Ptr &cloud1,
+	pcl::PointCloud<PointXYZRGB>::Ptr &cloud2, const pcl::PointXYZ &viewpoint,
+	pcl::Vertices &Ver1, pcl::Vertices &Ver2)
+{
+	//舒适化分别为点云2视点，点云2的三角面片对应点，点云1三角面三个顶点
+	Raytri rtcloud2p1(cloud2->at(Ver2.vertices[0]), cloud2->at(Ver2.vertices[1]), 
+		cloud1->at(Ver1.vertices[0]), cloud1->at(Ver1.vertices[1]), cloud1->at(Ver1.vertices[2]));
+	Raytri rtcloud2p2(cloud2->at(Ver2.vertices[0]), cloud2->at(Ver2.vertices[2]), 
+		cloud1->at(Ver1.vertices[0]), cloud1->at(Ver1.vertices[1]), cloud1->at(Ver1.vertices[2]));
+	Raytri rtcloud2p3(cloud2->at(Ver2.vertices[1]), cloud2->at(Ver2.vertices[2]), 
+		cloud1->at(Ver1.vertices[0]), cloud1->at(Ver1.vertices[1]), cloud1->at(Ver1.vertices[2]));
+	pcl::PointXYZRGB p1, p2, p3;
+	if (getCrossPoint(rtcloud2p1, p1) == 0)
+	{
+		cloud2->at(Ver2.vertices[0]).x = p1.x;
+		cloud2->at(Ver2.vertices[0]).y = p1.y;
+		cloud2->at(Ver2.vertices[0]).z = p1.z;
+		cloud2->at(Ver2.vertices[0]).r = 255;
+		cloud2->at(Ver2.vertices[0]).g = 0;
+		cloud2->at(Ver2.vertices[0]).b = 0;
+	}
+	if (getCrossPoint(rtcloud2p2, p2) == 0)
+	{
+		cloud2->at(Ver2.vertices[1]).x = p2.x;
+		cloud2->at(Ver2.vertices[1]).y = p2.y;
+		cloud2->at(Ver2.vertices[1]).z = p2.z;
+		cloud2->at(Ver2.vertices[0]).r = 0;
+		cloud2->at(Ver2.vertices[0]).g = 255;
+		cloud2->at(Ver2.vertices[0]).b = 0;
+	}
+	if (getCrossPoint(rtcloud2p3, p3) == 0)
+	{
+		cloud2->at(Ver2.vertices[2]).x = p3.x;
+		cloud2->at(Ver2.vertices[2]).y = p3.y;
+		cloud2->at(Ver2.vertices[2]).z = p3.z;
+		cloud2->at(Ver2.vertices[0]).r = 0;
+		cloud2->at(Ver2.vertices[0]).g = 0;
+		cloud2->at(Ver2.vertices[0]).b = 255;
+	}
+}
+
+void adjustParallCloud(const pcl::PointCloud<PointXYZRGB>::Ptr &cloud1,
+	pcl::PointCloud<PointXYZRGB>::Ptr &cloud2, const pcl::PointXYZ &viewpoint,
+	pcl::Vertices &Ver1, pcl::Vertices &Ver2)
+{
+	Raytri rtPlane(cloud1->at(Ver1.vertices[0]), cloud1->at(Ver1.vertices[1]), 
+		cloud1->at(Ver1.vertices[2]));
+	
+	pcl::PointXYZRGB p1 = cloud2->at(Ver2.vertices[0]), p2 = cloud2->at(Ver2.vertices[1]),
+		p3 = cloud2->at(Ver2.vertices[2]);
+	pcl::PointXYZRGB outp1, outp2, outp3;
+	if (getParallPoint(rtPlane, p1, outp1) == 0)
+	{
+		cloud2->at(Ver2.vertices[0]).x = outp1.x;
+		cloud2->at(Ver2.vertices[0]).y = outp1.y;
+		cloud2->at(Ver2.vertices[0]).z = outp1.z;
+	}
+	if (getParallPoint(rtPlane, p2, outp3) == 0)
+	{
+		cloud2->at(Ver2.vertices[1]).x = outp2.x;
+		cloud2->at(Ver2.vertices[1]).y = outp2.y;
+		cloud2->at(Ver2.vertices[1]).z = outp2.z;
+	}
+	if (getParallPoint(rtPlane, p3, outp3) == 0)
+	{
+		cloud2->at(Ver2.vertices[2]).x = outp3.x;
+		cloud2->at(Ver2.vertices[2]).y = outp3.y;
+		cloud2->at(Ver2.vertices[2]).z = outp3.z;
 	}
 }

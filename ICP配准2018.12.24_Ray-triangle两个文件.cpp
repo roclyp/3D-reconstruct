@@ -270,7 +270,7 @@ int main()
 	mytriangles1->viewpoints = ZeroPoint;
 	mytriangles2->viewpoints = ZeroPoint_Trans;
 
-	//pcl::PolygonMesh triangles1;
+	pcl::PolygonMesh triangles1;
 	//pcl::PolygonMesh triangles2;
 	greedy_triangle(mytriangles1->cloudxyz, mytriangles1->triangle, paraall);
 	greedy_triangle(mytriangles2->cloudxyz, mytriangles2->triangle, paraall);
@@ -278,29 +278,100 @@ int main()
 	vector<MyTriangles> cloud1_cen_tri;
 	vector<MyTriangles> cloud2_cen_tri;
 	//计算三角面片中心坐标点然后根据该坐标点重新建立中心的点云，每个中心点与三角面片进行映射，
-	//	后续寻找三角面片邻近的三角面片，然后计算交叉干涉情况
+	//	后续寻找三角面片邻近的三角面片，然后计算交叉干涉情况,得到的是点云三角面片的中心点，中心点对应的三角面片，已经三角面片的id
 	/*map<pcl::PointXYZ, pcl::Vertices> cloud1_cen_tri;
 	map<pcl::PointXYZ, pcl::Vertices> cloud2_cen_tri;*/
-	pcl::PointCloud<PointXYZ>::Ptr cloud1_cen;
-	pcl::PointCloud<PointXYZ>::Ptr cloud2_cen;
-	for (int i = 0; i < mytriangles1->triangle.polygons.size(); i++)
+	pcl::PointCloud<PointXYZ>::Ptr cloud1_cen(new pcl::PointCloud<PointXYZ>);
+	pcl::PointCloud<PointXYZ>::Ptr cloud2_cen(new pcl::PointCloud<PointXYZ>);
+	for (int i1 = 0; i1 < mytriangles1->triangle.polygons.size(); i1++)
 	{
-		MyTriangles temp(mytriangles1->cloudxyzrgb, mytriangles1->triangle.polygons.at(i),i);
+		MyTriangles temp(mytriangles1->cloudxyzrgb, mytriangles1->triangle.polygons.at(i1),i1);
 		cloud1_cen_tri.push_back(temp);
 		cloud1_cen->push_back(temp.centerPoint);
 	}
-	for (int i = 0; i < mytriangles2->triangle.polygons.size(); i++)
+	for (int i2 = 0; i2 < mytriangles2->triangle.polygons.size(); i2++)
 	{
-		MyTriangles temp(mytriangles2->cloudxyzrgb, mytriangles2->triangle.polygons.at(i),i);
+		MyTriangles temp(mytriangles2->cloudxyzrgb, mytriangles2->triangle.polygons.at(i2),i2);
 		cloud2_cen_tri.push_back(temp);
 		cloud2_cen->push_back(temp.centerPoint);
 	}
 
 	////存储三角面片干涉关系后续可以通过图的方式来优化缩小存储空间，并进行提速，目前先用链表或vector来进行存储
-	map<pcl::Vertices, vector<pcl::Vertices>> triInter_cloud1;
-	map<pcl::Vertices, vector<pcl::Vertices>> triInter_cloud2;
-	getCenNeiborTri(cloud1_cen, cloud2_cen, cloud1_cen_tri, cloud2_cen_tri);
-	getCenNeiborTri(cloud2_cen, cloud1_cen, cloud2_cen_tri, cloud1_cen_tri);
+	/*map<pcl::Vertices, vector<pcl::Vertices>> triInter_cloud1;
+	map<pcl::Vertices, vector<pcl::Vertices>> triInter_cloud2;*/
+
+	getCenNeiborTri(cloud1_cen, cloud2_cen, cloud1_cen_tri, cloud2_cen_tri, paraall);
+	//getCenNeiborTri(cloud2_cen, cloud1_cen, cloud2_cen_tri, cloud1_cen_tri, paraall);
+	time_t t5 = GetTickCount();
+	cout << "Get Neibor Triangles Use time: " << ((t5 - t3)*1.0 / 1000) << " s" << endl;
+
+	pcl::PointCloud<PointXYZRGB>::Ptr cloud2_adjust(new pcl::PointCloud<PointXYZRGB>);
+	pcl::copyPointCloud(*mytriangles2->cloudxyzrgb, *cloud2_adjust);
+	
+	map<string, vector<pcl::Vertices>> sameCross;
+	map<string, vector<pcl::Vertices>> twosideCross;
+	map<string, vector<pcl::Vertices>> parallmap;
+	ray_triangle(cloud1_cen_tri, mytriangles1->cloudxyzrgb, mytriangles2->cloudxyzrgb, 
+		sameCross, twosideCross, parallmap);
+	cout << "same side Cross Processing" << endl;
+	auto sameit = sameCross.begin();
+	while (sameit != sameCross.end())
+	{
+		if (sameit->second.size() == 0)
+		{
+			sameit++;
+			continue;
+		}
+		else
+		{
+			pcl::Vertices cloud1ver;
+			//解码
+			str2Vertices(sameit->first, cloud1ver);
+			for (auto c : sameit->second)
+				adjustCrossCloud(mytriangles1->cloudxyzrgb, cloud2_adjust, mytriangles2->viewpoints->at(0), cloud1ver, c);
+			sameit++;
+		}
+	}
+	cout << "2 sides Cross Processing" << endl;
+	auto twoCrossit = twosideCross.begin();
+	while (twoCrossit != twosideCross.end())
+	{
+		if (twoCrossit->second.size() == 0)
+		{
+			twoCrossit++;
+			continue;
+		}
+		else
+		{
+			pcl::Vertices cloud1ver;
+			//解码
+			str2Vertices(twoCrossit->first, cloud1ver);
+			for (auto c : twoCrossit->second)
+				adjustCrossCloud(mytriangles1->cloudxyzrgb, cloud2_adjust, mytriangles2->viewpoints->at(0), cloud1ver, c);
+			twoCrossit++;
+		}
+	}
+	cout << "Parall Processing" << endl;
+	auto parallit = parallmap.begin();
+	while (parallit != parallmap.end())
+	{
+		if (parallit->second.size() == 0)
+		{
+			parallit++;
+			continue;
+		}
+		else
+		{
+			pcl::Vertices cloud1ver;
+			//解码
+			str2Vertices(parallit->first, cloud1ver);
+			for (auto c : parallit->second)
+				adjustParallCloud(mytriangles1->cloudxyzrgb, cloud2_adjust, mytriangles2->viewpoints->at(0), cloud1ver, c);
+			parallit++;
+		}
+	}
+
+
 
 	//mytriangles1->triangle = triangles1;
 	//mytriangles2->triangle = triangles2;
@@ -326,11 +397,26 @@ int main()
 
 
 
+	boost::shared_ptr< pcl::visualization::PCLVisualizer> viewer(new pcl::visualization::PCLVisualizer);
+	viewer->setBackgroundColor(0.5, 0.5, 0.5);
+	viewer->addPointCloud(mytriangles1->cloudxyzrgb,"cloud1_before_adjust");
+	viewer->addPointCloud(mytriangles2->cloudxyzrgb, "cloud2_before_adjust");
+	pcl::PolygonMesh mesh1, mesh2, colormesh1;
+	greedy_triangle(mytriangles1->cloudxyzrgb, mesh1, paraall);
+	greedy_triangle(mytriangles2->cloudxyzrgb, mesh2, paraall);
+	getcolormesh(mesh1, mytriangles1->cloudxyzrgb, colormesh1);
+	viewer->addPolygonMesh(colormesh1, "cloud1mesh_Color");
+	viewer->addPolygonMesh(mesh2, "cloud2mesh");
 
+	boost::shared_ptr< pcl::visualization::PCLVisualizer> viewer2(new pcl::visualization::PCLVisualizer);
+	viewer2->setBackgroundColor(0.5, 0.5, 0.5);
+	viewer2->addPointCloud(mytriangles1->cloudxyzrgb, "cloud1_after_adjust");
+	viewer2->addPointCloud(cloud2_adjust, "cloud2_after_adjust");
+	pcl::PolygonMesh adjust_mesh2;
+	greedy_triangle(cloud2_adjust, adjust_mesh2, paraall);
+	viewer2->addPolygonMesh(colormesh1, "cloud1mesh_Color_adjusted");
+	viewer2->addPolygonMesh(adjust_mesh2, "cloud2mesh_adjusted");
 
-
-	//boost::shared_ptr< pcl::visualization::PCLVisualizer> viewer(new pcl::visualization::PCLVisualizer);
-	//viewer->setBackgroundColor(0.5, 0.5, 0.5);
 	//viewer->addPointCloud(cloud1_target1, "cloud1");
 	//viewer->addPointCloud(cloud2_source2, "cloud2");
 	//viewer->addPointCloud(align, "cloud2afterregist");
@@ -359,17 +445,22 @@ int main()
 
 	//boost::shared_ptr< pcl::visualization::PCLVisualizer> viewer2(new pcl::visualization::PCLVisualizer);
 	//viewer2->setBackgroundColor(0.5, 0.5, 0.5);
+	for (int i = 0; i < mytriangles2->cloudxyzrgb->size(); i++)
+	{
+		stringstream lines;
+		lines << i;
+		viewer2->addLine<pcl::PointXYZRGB>(mytriangles2->cloudxyzrgb->at(i), cloud2_adjust->at(i), 255, 0, 0, lines.str());
+	}
 
-
-	//time_t t4 = GetTickCount();
-	//cout << "Trianglation interation Use time: " << ((t3 - t4)*1.0 / 1000) << " s" << endl;
-	//cout << "Finished!..." << endl;
-	//while (!viewer->wasStopped())
-	//{
-	//	viewer->spinOnce(100);
-	//	viewer2->spinOnce(100);
-	//	boost::this_thread::sleep(boost::posix_time::microseconds(100000));
-	//}
+	time_t t4 = GetTickCount();
+	cout << "Trianglation interation Use time: " << ((t4 - t3)*1.0 / 1000) << " s" << endl;
+	cout << "Finished!..." << endl;
+	while (!viewer->wasStopped())
+	{
+		viewer->spinOnce(100);
+		viewer2->spinOnce(100);
+		boost::this_thread::sleep(boost::posix_time::microseconds(100000));
+	}
 
 	getchar();
 }
