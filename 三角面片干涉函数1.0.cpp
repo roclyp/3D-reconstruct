@@ -418,9 +418,9 @@ void ray_triangle(const vector<MyTriangles> &cloud1_cen_tri, const pcl::PointClo
 			{
 				break;
 			}
-			else if((intersect_triangle(p1p2) == 3 && intersect_triangle(p1p3) == 3 && intersect_triangle(p2p3) == 0)
-				|| (intersect_triangle(p1p2) == 3 && intersect_triangle(p1p3) == 0 && intersect_triangle(p2p3) == 3)
-				|| (intersect_triangle(p1p2) == 0 && intersect_triangle(p1p3) == 3 && intersect_triangle(p2p3) == 3))
+			else if((intersect_triangle(p1p2) == 0 && intersect_triangle(p1p3) == 3 && intersect_triangle(p2p3) == 3)
+				|| (intersect_triangle(p1p3) == 0 && intersect_triangle(p1p2) == 3 &&  intersect_triangle(p2p3) == 3)
+				|| (intersect_triangle(p2p3) == 0 && intersect_triangle(p1p2) == 3 && intersect_triangle(p1p3) == 3))
 			{
 				break;
 			}
@@ -505,18 +505,18 @@ void adjustCrossCloud(const pcl::PointCloud<PointXYZRGB>::Ptr &cloud1,
 		cloud2->at(Ver2.vertices[1]).x = p2.x;
 		cloud2->at(Ver2.vertices[1]).y = p2.y;
 		cloud2->at(Ver2.vertices[1]).z = p2.z;
-		cloud2->at(Ver2.vertices[0]).r = 0;
-		cloud2->at(Ver2.vertices[0]).g = 255;
-		cloud2->at(Ver2.vertices[0]).b = 0;
+		cloud2->at(Ver2.vertices[1]).r = 255;
+		cloud2->at(Ver2.vertices[1]).g = 0;
+		cloud2->at(Ver2.vertices[1]).b = 0;
 	}
 	if (getCrossPoint(rtcloud2p3, p3) == 0)
 	{
 		cloud2->at(Ver2.vertices[2]).x = p3.x;
 		cloud2->at(Ver2.vertices[2]).y = p3.y;
 		cloud2->at(Ver2.vertices[2]).z = p3.z;
-		cloud2->at(Ver2.vertices[0]).r = 0;
-		cloud2->at(Ver2.vertices[0]).g = 0;
-		cloud2->at(Ver2.vertices[0]).b = 255;
+		cloud2->at(Ver2.vertices[2]).r = 255;
+		cloud2->at(Ver2.vertices[2]).g = 0;
+		cloud2->at(Ver2.vertices[2]).b = 0;
 	}
 }
 
@@ -535,17 +535,26 @@ void adjustParallCloud(const pcl::PointCloud<PointXYZRGB>::Ptr &cloud1,
 		cloud2->at(Ver2.vertices[0]).x = outp1.x;
 		cloud2->at(Ver2.vertices[0]).y = outp1.y;
 		cloud2->at(Ver2.vertices[0]).z = outp1.z;
+		cloud2->at(Ver2.vertices[2]).r = 255;
+		cloud2->at(Ver2.vertices[2]).g = 0;
+		cloud2->at(Ver2.vertices[2]).b = 0;
 	}
 	if (getParallPoint(rtPlane, p2, outp3) == 0)
 	{
 		cloud2->at(Ver2.vertices[1]).x = outp2.x;
 		cloud2->at(Ver2.vertices[1]).y = outp2.y;
 		cloud2->at(Ver2.vertices[1]).z = outp2.z;
+		cloud2->at(Ver2.vertices[2]).r = 255;
+		cloud2->at(Ver2.vertices[2]).g = 0;
+		cloud2->at(Ver2.vertices[2]).b = 0;
 	}
 	if (getParallPoint(rtPlane, p3, outp3) == 0)
 	{
 		cloud2->at(Ver2.vertices[2]).x = outp3.x;
 		cloud2->at(Ver2.vertices[2]).y = outp3.y;
 		cloud2->at(Ver2.vertices[2]).z = outp3.z;
+		cloud2->at(Ver2.vertices[2]).r = 255;
+		cloud2->at(Ver2.vertices[2]).g = 0;
+		cloud2->at(Ver2.vertices[2]).b = 0;
 	}
 }
