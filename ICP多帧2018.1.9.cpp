@@ -222,13 +222,14 @@ int main()
 	pcl::PointCloud<PointXYZRGB>::Ptr cloud2_source(new pcl::PointCloud<PointXYZRGB>);
 	pcl::PointCloud<PointXYZRGB>::Ptr cloud1_target1(new pcl::PointCloud<PointXYZRGB>);
 	pcl::PointCloud<PointXYZRGB>::Ptr cloud2_source2(new pcl::PointCloud<PointXYZRGB>);
-	pcl::copyPointCloud(*AllCloud.at(0), *cloud1_target);
+	//pcl::copyPointCloud(*AllCloud.at(0), *cloud1_target);
 	
-	for (int i = 1; i < AllCloud.size(); i++)
+	for (int i = 1; i <3 /*AllCloud.size()*/; i++)
 	{	
+		pcl::copyPointCloud(*AllCloud.at(i-1), *cloud1_target);
 		pcl::copyPointCloud(*AllCloud.at(i), *cloud2_source);
 		//先将前一帧的转换矩阵应用到后一帧
-		pcl::transformPointCloud(*cloud2_source, *cloud2_source, global_transform);
+		//pcl::transformPointCloud(*cloud2_source, *cloud2_source, global_transform);
 		downsampling(cloud1_target, cloud1_target1, leafsize);
 		downsampling(cloud2_source, cloud2_source2, leafsize);
 
@@ -281,12 +282,11 @@ int main()
 		//三角干涉需要处理原始点云以及旋转后的点云
 		pcl::PointCloud<PointXYZRGB>::Ptr tricloud2xyzrgb(new pcl::PointCloud<PointXYZRGB>);
 		pcl::transformPointCloud(*cloud2_source, *tricloud2xyzrgb, fpfhtransformation*icptransformation);
-		global_transform *= fpfhtransformation * icptransformation;
+		
 		time_t t2 = GetTickCount();
 		cout << "Registeration Use time: " << ((t2 - tfpfh)*1.0 / 1000) << " s" << endl;
 		cout << "--------------------------";
 
-		*cloud_NoMls += *tricloud2xyzrgb;
 		//MLS处理
 		time_t t3 = GetTickCount();
 		pcl::PointCloud<PointXYZRGB>::Ptr tempfinal(new pcl::PointCloud<PointXYZRGB>);
@@ -312,13 +312,17 @@ int main()
 		mls.setSearchMethod(search);
 		mls.setSearchRadius(SearchRadiusmls);//越大的话平滑力度越大
 		mls.process(*result);
-		cloud1_target->clear();
+		pcl::PointCloud<pcl::PointXYZRGB>::Ptr globalresult(new pcl::PointCloud<pcl::PointXYZRGB>);
 		for (int i = cloud1_target->size(); i < result->size(); i++)
 		{
-			cloud1_target->push_back(result->at(i));
+			globalresult->push_back(result->at(i));
 		}
 		/**cloud_Mls += *cloud1_target;*/
-		*cloud_Mls += *tricloud2xyzrgb;
+		pcl::transformPointCloud(*tricloud2xyzrgb, *tricloud2xyzrgb, global_transform);
+		pcl::transformPointCloud(*globalresult, *globalresult, global_transform);
+		*cloud_NoMls += *tricloud2xyzrgb;
+		*cloud_Mls += *globalresult;
+		global_transform *= fpfhtransformation * icptransformation;
 	}
 
 	

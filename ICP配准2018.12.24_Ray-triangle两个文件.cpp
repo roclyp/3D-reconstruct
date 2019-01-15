@@ -315,25 +315,25 @@ int main()
 	//这步骤得到的是点云2对于点云1的干涉情况
 	ray_triangle(cloud2_cen_tri, mytriangles2->cloudxyzrgb, mytriangles1->cloudxyzrgb, 
 		sameCross, twosideCross, parallmap);
-	//cout << "same side Cross Processing" << endl;
-	//auto sameit = sameCross.begin();
-	//while (sameit != sameCross.end())
-	//{
-	//	if (sameit->second.size() == 0)
-	//	{
-	//		sameit++;
-	//		continue;
-	//	}
-	//	else
-	//	{
-	//		pcl::Vertices cloud2ver;
-	//		//解码
-	//		str2Vertices(sameit->first, cloud2ver);
-	//		for (auto c : sameit->second)
-	//			adjustCrossCloud(mytriangles1->cloudxyzrgb, cloud2_adjust, mytriangles2->viewpoints->at(0), c, cloud2ver);
-	//		sameit++;
-	//	}
-	//}
+	cout << "same side Cross Processing" << endl;
+	auto sameit = sameCross.begin();
+	while (sameit != sameCross.end())
+	{
+		if (sameit->second.size() == 0)
+		{
+			sameit++;
+			continue;
+		}
+		else
+		{
+			pcl::Vertices cloud2ver;
+			//解码
+			str2Vertices(sameit->first, cloud2ver);
+			for (auto c : sameit->second)
+				adjustCrossCloud(mytriangles1->cloudxyzrgb, cloud2_adjust, mytriangles2->viewpoints->at(0), c, cloud2ver);
+			sameit++;
+		}
+	}
 	//cout << "2 sides Cross Processing" << endl;
 	//auto twoCrossit = twosideCross.begin();
 	//while (twoCrossit != twosideCross.end())
@@ -354,25 +354,25 @@ int main()
 	//	}
 	//}
 
-	cout << "Parall Processing" << endl;
-	auto parallit = parallmap.begin();
-	while (parallit != parallmap.end())
-	{
-		if (parallit->second.size() == 0)
-		{
-			parallit++;
-			continue;
-		}
-		else
-		{
-			pcl::Vertices cloud2ver;
-			//解码
-			str2Vertices(parallit->first, cloud2ver);
-			for (auto c : parallit->second)
-				adjustParallCloud(mytriangles1->cloudxyzrgb, cloud2_adjust, mytriangles2->viewpoints->at(0), c, cloud2ver);
-			parallit++;
-		}
-	}
+	//cout << "Parall Processing" << endl;
+	//auto parallit = parallmap.begin();
+	//while (parallit != parallmap.end())
+	//{
+	//	if (parallit->second.size() == 0)
+	//	{
+	//		parallit++;
+	//		continue;
+	//	}
+	//	else
+	//	{
+	//		pcl::Vertices cloud2ver;
+	//		//解码
+	//		str2Vertices(parallit->first, cloud2ver);
+	//		for (auto c : parallit->second)
+	//			adjustParallCloud(mytriangles1->cloudxyzrgb, cloud2_adjust, mytriangles2->viewpoints->at(0), c, cloud2ver);
+	//		parallit++;
+	//	}
+	//}
 
 
 
@@ -409,8 +409,8 @@ int main()
 		temppoint1.y = mytriangles2->cloudxyzrgb->at(i).y;
 		temppoint1.z = mytriangles2->cloudxyzrgb->at(i).z;
 		temppoint1.r = 255;
-		temppoint1.g = 255;
-		temppoint1.b = 255;
+		temppoint1.g = 0;
+		temppoint1.b = 0;
 		temp1->push_back(temppoint1);
 	}
 	for (int i=0;i<mytriangles1->cloudxyzrgb->size();i++)
@@ -458,8 +458,8 @@ int main()
 		temppoint1.y = cloud2_adjust->at(i).y;
 		temppoint1.z = cloud2_adjust->at(i).z;
 		temppoint1.r = 255;
-		temppoint1.g = 255;
-		temppoint1.b = 255;
+		temppoint1.g = 0;
+		temppoint1.b = 0;
 		temp2->push_back(temppoint1);
 	}
 	for (int i = 0; i < mytriangles1->cloudxyzrgb->size(); i++)
