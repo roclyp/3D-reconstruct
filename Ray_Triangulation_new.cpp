@@ -1,5 +1,5 @@
 ﻿#include "MyClassType.h"
-#define EPSILON 0.00000001
+#define EPSILON 0.000000001
 #define TRiERROR 1
 //叉乘
 #define CROSS(dest,v1,v2) \
@@ -31,10 +31,10 @@ int Cross_triangle(const Raytri& rt)
 	//若该法向量与另一条边点乘小于EPSILON，则说明该法向量与另一边垂直
 	//由于法向量垂直edge1,edge2,和射线，那么三线共平面，此时返回0
 	det = DOT(pvec, edge1);
-	if (det < EPSILON && det > EPSILON)
+	if (det < EPSILON && det > -EPSILON)
 		return 0;
 	//否则,用点乘的结果的倒数计算u，v，t的值
-	inv_det = 1.0 / det;
+	inv_det = 1.0 / det;//负号or not
 	SUB(tvec, rt.P0, rt.v0);
 	u = DOT(tvec, pvec)*inv_det;
 	if (u < 0 || u> 1)
@@ -51,8 +51,8 @@ int Cross_triangle(const Raytri& rt)
 
 }
 
-//获取三角面中直面角度
-double getAngle(spacePlane &sp1, spacePlane &sp2, spaceLine &crossLine)
+//获取三角面中直面角度,参数分别为输入的两个平面，输出的中值平面与两个面的交线，返回的是两个面的夹角
+double getAngle(spacePlane &sp1, spacePlane &sp2, spacePlane &outsp,spaceLine &crossLine)
 {
 	double norPlane1[3], norPlane2[3];
 	double crossx, crossy, crossz = 0;
@@ -66,7 +66,34 @@ double getAngle(spacePlane &sp1, spacePlane &sp2, spaceLine &crossLine)
 	crossx = (sp1.B*sp2.D - sp2.B*sp1.D)*1.0 / (sp2.B*sp1.A - sp1.B*sp2.A);
 	crossy = (sp1.A*sp2.D - sp2.A*sp1.D)*1.0 / (sp2.A*sp1.B - sp1.A*sp2.B);
 	CROSS(crossLinetemp, norPlane1, norPlane2);
+	//得到两平面交线
 	crossLine.dx = crossLinetemp[0]; crossLine.dy = crossLinetemp[1]; crossLine.dz = crossLinetemp[2];
 	crossLine.x0 = crossx; crossLine.y0 = crossy; crossLine.z0 = crossz;
+	double outnor[3];
+	getTransNormal(norPlane1, crossLine, angle*1.0 / 2, outnor);
+	outsp.A = outnor[0];
+	outsp.B = outnor[1];
+	outsp.C = outnor[2];
+	outsp.D = -(outsp.A*crossx + outsp.B*crossy + outsp.C*crossz);
 	return angle;
+}
+
+void getTransNormal(double nor[], spaceLine &sline, double angle, double outnor[])
+{
+	double axles[3];
+	double standard = sqrt(sline.dx*sline.dx + sline.dy*sline.dy + sline.dz*sline.dz);
+	axles[0] = sline.dx*1.0 / standard;
+	axles[1] = sline.dy*1.0 / standard;
+	axles[2] = sline.dz*1.0 / standard;
+	//now是uvw，axles是xyz
+	//亮相了点乘并与角度建立关系
+	double finalD = (axles[0] * nor[0] + axles[1] * nor[1] + axles[2] * nor[2])*
+		(1 - cos(angle));
+	//旋转公式参考https://blog.csdn.net/wishchin/article/details/80926037
+	outnor[0] = nor[0] * cos(angle) + (axles[1] * nor[2] - axles[2] * nor[1])*sin(angle)
+		+ axles[0] * finalD;
+	outnor[1] = nor[1] * cos(angle) + (axles[2] * nor[0] - axles[0] * nor[2])*sin(angle)
+		+ axles[1] * finalD;
+	outnor[2] = nor[2] * cos(angle) + (axles[0] * nor[1] - axles[1] * nor[0])*sin(angle)
+		+ axles[2] * finalD;
 }

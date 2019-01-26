@@ -162,14 +162,13 @@ int main()
 	PointCloud<PointXYZRGB>::Ptr cloud2trans(new PointCloud<PointXYZRGB>);
 	pcl::transformPointCloud(*cloud2, *cloud2trans, fpfh_trans);
 	pcl::transformPointCloud(*cloud2trans, *cloud2trans, ICP_trans);
-	//三角化准以前都是对的
+	//三角化以前都是对的
 
 
 	//测试阶段为了让区分明显， 因此点云1网格显示为彩色
 	PolygonMesh meshcloud1,meshcloud2;
 	trianglulation(cloud1, meshcloud1, para, true);
 	trianglulation(cloud2trans, meshcloud2, para);
-
 
 
 	//先获取点云1，点云2三角面片对应的中心点云1，2；
@@ -181,13 +180,42 @@ int main()
 	//因此程序要讲点云2中的每个点添加到点云1中去计算，最后得到点云2中各个三角面片的邻近三角面片
 	getNeiborTriangle(cloudCenVer2, cloudCenVer1, para);
 
+	//for (int i = 0; i < cloudCenVer2.interAll.at(1000).vertices.vertices.size(); i++)
+	//{
+	//	cloud2trans->at(cloudCenVer2.interAll.at(1000).vertices.vertices[i]).r = 0;
+	//	cloud2trans->at(cloudCenVer2.interAll.at(1000).vertices.vertices[i]).g = 0;
+	//	cloud2trans->at(cloudCenVer2.interAll.at(1000).vertices.vertices[i]).b = 255;
+	//}
+	//for (int i = 0; i < cloudCenVer2.interAll.at(1000).neiborvers.size(); i++)
+	//{
+	//	for (int j = 0; j < cloudCenVer2.interAll.at(1000).neiborvers.at(i).vertices.size(); j++)
+	//	{
+	//		cloud1->at(cloudCenVer2.interAll.at(1000).neiborvers.at(i).vertices[j]).r = 255;
+	//		cloud1->at(cloudCenVer2.interAll.at(1000).neiborvers.at(i).vertices[j]).g = 0;
+	//		cloud1->at(cloudCenVer2.interAll.at(1000).neiborvers.at(i).vertices[j]).b = 0;
+	//	}
+	//}
+
+	PolygonMesh meshcloud3, meshcloud4;
+	trianglulation(cloud1, meshcloud3, para, true);
+	trianglulation(cloud2trans, meshcloud4, para);
+
 	//对点云2处理三角面片相交的情况
 	TriCross(cloudCenVer2, cloud2trans, cloudCenVer1, cloud1, para);
 	
 	//处理平行、相交面片
 	PointCloud<PointXYZRGB>::Ptr outcloud(new PointCloud<PointXYZRGB>);
-	DealWithTri(cloudCenVer2, cloud2trans, cloud1, para);
+	PointCloud<PointXYZRGB>::Ptr cross2cloud(new PointCloud<PointXYZRGB>);
+	PointCloud<PointXYZRGB>::Ptr cross1cloud(new PointCloud<PointXYZRGB>);
+	PointCloud<PointXYZRGB>::Ptr parallelcloud(new PointCloud<PointXYZRGB>);
+	//DealWithTri(cloudCenVer2, cloud2trans, cloud1, outcloud,
+	//	cross2cloud, cross1cloud, parallelcloud, para);
 
+	DealCross2cLoud(cloudCenVer2, cloud2trans, cloud1, outcloud, cross2cloud, para);
+	DealCross1cLoud(cloudCenVer2, cloud2trans, cloud1, outcloud, cross1cloud, para);
+	//DealParalledcLoud(cloudCenVer2, cloud2trans, cloud1, outcloud, parallelcloud, para);
+
+	//pcl::io::savePCDFile("C:\\Users\\zhihong\\Desktop\\cup\\2019.1.19\\三角变化后2.pcd",*outcloud);
 
 	//该店云目的是为了显示
 	PolygonMesh meshcloud_down, meshbefore, meshafter;
@@ -200,27 +228,52 @@ int main()
 	boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer(new pcl::visualization::PCLVisualizer("viewer1"));
 	boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer2(new pcl::visualization::PCLVisualizer("viewer2"));
 	boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer3(new pcl::visualization::PCLVisualizer("viewer3"));
+	viewer->setBackgroundColor(0.5, 0.5, 0.5);
+	viewer2->setBackgroundColor(0.5, 0.5, 0.5);
+	viewer3->setBackgroundColor(0.7, 0.7, 0.7);
 
 	viewer->addPointCloud(cloud1, "cloud1");
-	viewer->addPointCloud(cloud2, "cloud2");
 	viewer->addPolygonMesh(meshcloud1, "mesh1");
+	viewer->addPointCloud(cloud2, "cloud2");
 	viewer->addPolygonMesh(meshbefore, "mesh2");
 
 	viewer2->addPointCloud(cloud1, "cloud1");
+	viewer2->addPolygonMesh(meshcloud3, "mesh1");
 	viewer2->addPointCloud(cloud2trans, "cloud2");
-	viewer2->addPolygonMesh(meshcloud1, "mesh1");
-	viewer2->addPolygonMesh(meshcloud2, "mesh2");
+	viewer2->addPolygonMesh(meshcloud4, "mesh2");
 
+	
+	//PolygonMesh outmesh;
+	/*PointCloud<PointXYZRGB>::Ptr cloudn(new PointCloud<PointXYZRGB>);
+	pcl::copyPointCloud(*cloud1, *cloudn);*/
 
-	while (!viewer->wasStopped() && !viewer2->wasStopped())
+	PolygonMesh outmesh;
+	viewer3->addPointCloud(cloud1, "cloud1");
+	//viewer3->addPolygonMesh(meshcloud1, "mesh1");
+	//trianglulation(outcloud, outmesh, para);
+	viewer3->addPointCloud(cloud2trans, "cloud2");
+	for (int i = 0; i < outcloud->size(); i++)
+	{
+		outcloud->at(i).r = 255;
+		outcloud->at(i).g = 0;
+		outcloud->at(i).b = 0;
+	}
+	PointCloud<PointXYZRGB>::Ptr cloudout_down(new PointCloud<PointXYZRGB>);
+	downsampling(outcloud, cloudout_down, para.leafsize);
+	viewer3->addPointCloud(cloudout_down, "cloud");
+	cout << outcloud->size() << endl;
+	cout << cloudout_down->size() << endl;
+	/*viewer3->addPolygonMesh(outmesh, "mesh");*/
+
+	while (!viewer->wasStopped() && !viewer2->wasStopped() /*&& !viewer3->wasStopped()*/)
 	{
 		viewer->spinOnce(100);
 		viewer2->spinOnce(100);
+		viewer3->spinOnce(100);
 		boost::this_thread::sleep(boost::posix_time::microseconds(100000));
 	}
 
 	//因此输入为点云1，点云2，点云2的三角面片，
 	//输出为与点云1存在相交或者平行情况的三角面片(包括了该三角面片与相交或平行的点云1的三角面片)的vector；
-	
 
 }
