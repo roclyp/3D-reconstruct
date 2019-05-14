@@ -1,4 +1,4 @@
-#include "PCLlibrary.h"
+ï»¿#include "PCLlibrary.h"
 #include <iostream>
 #include <string>
 #include <pcl/console/time.h>   // TicToc
@@ -26,7 +26,7 @@ void ConfigFileRead(map<string, string>& m_mapConfigInfo)
 		while (!configFile.eof())
 		{
 			getline(configFile, str_line);
-			if (str_line.find('#') == 0) //¹ıÂËµô×¢ÊÍĞÅÏ¢£¬¼´Èç¹ûÊ×¸ö×Ö·ûÎª#¾Í¹ıÂËµôÕâÒ»ĞĞ
+			if (str_line.find('#') == 0) //è¿‡æ»¤æ‰æ³¨é‡Šä¿¡æ¯ï¼Œå³å¦‚æœé¦–ä¸ªå­—ç¬¦ä¸º#å°±è¿‡æ»¤æ‰è¿™ä¸€è¡Œ
 			{
 				continue;
 			}
@@ -82,13 +82,13 @@ int main()
 
 	pcl::search::KdTree<PointXYZRGB>::Ptr kdtree1(new pcl::search::KdTree<PointXYZRGB>);
 	kdtree1->setInputCloud(cloud);
-	//¼ÆËãÃ¿¸öµã·¨ÏòÁ¿
+	//è®¡ç®—æ¯ä¸ªç‚¹æ³•å‘é‡
 	pcl::NormalEstimation<pcl::PointXYZRGB, pcl::Normal> n;
 	pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
 	n.setInputCloud(cloud);
-	//µãÔÆ·¨Ïò¼ÆËãÊ±£¬ĞèÒªËùËÑµÄ½üÁÚµã´óĞ¡
+	//ç‚¹äº‘æ³•å‘è®¡ç®—æ—¶ï¼Œéœ€è¦æ‰€æœçš„è¿‘é‚»ç‚¹å¤§å°
 	n.setKSearch(knums);
-	//¿ªÊ¼½øĞĞ·¨Ïò¼ÆËã
+	//å¼€å§‹è¿›è¡Œæ³•å‘è®¡ç®—
 	n.compute(*normals);
 
 

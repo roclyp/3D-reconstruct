@@ -1,6 +1,7 @@
-﻿#include "MyClassType.h"
-#define EPSILON 0.000000001
+﻿#include "Ray_Triangulation.h"
+#define EPSILON 0.00000000001
 #define TRiERROR 1
+#define PI 3.141592657
 //叉乘
 #define CROSS(dest,v1,v2) \
 	dest[0]=v1[1]*v2[2]-v1[2]*v2[1]; \
@@ -61,8 +62,10 @@ double getAngle(spacePlane &sp1, spacePlane &sp2, spacePlane &outsp,spaceLine &c
 	norPlane2[0] = sp2.A; norPlane2[1] = sp2.B; norPlane2[2] = sp2.C;
 	double absNor1 = sqrt(sp1.A*sp1.A + sp1.B*sp1.B + sp1.C*sp1.C);
 	double absNor2 = sqrt(sp2.A*sp2.A + sp2.B*sp2.B + sp2.C*sp2.C);
-	double abdot = abs(DOT(norPlane1, norPlane2)*1.0/(absNor1*absNor2));
+	double abdot = (DOT(norPlane1, norPlane2)*1.0/(absNor1*absNor2));
 	double angle = acos(abdot);
+	if (angle >= (PI*1.0 / 2) && angle <= PI)
+		angle = PI * 1.0 / 2 - angle;
 	crossx = (sp1.B*sp2.D - sp2.B*sp1.D)*1.0 / (sp2.B*sp1.A - sp1.B*sp2.A);
 	crossy = (sp1.A*sp2.D - sp2.A*sp1.D)*1.0 / (sp2.A*sp1.B - sp1.A*sp2.B);
 	CROSS(crossLinetemp, norPlane1, norPlane2);
@@ -86,14 +89,22 @@ void getTransNormal(double nor[], spaceLine &sline, double angle, double outnor[
 	axles[1] = sline.dy*1.0 / standard;
 	axles[2] = sline.dz*1.0 / standard;
 	//now是uvw，axles是xyz
-	//亮相了点乘并与角度建立关系
+	//俩向量点乘并与角度建立关系
 	double finalD = (axles[0] * nor[0] + axles[1] * nor[1] + axles[2] * nor[2])*
 		(1 - cos(angle));
-	//旋转公式参考https://blog.csdn.net/wishchin/article/details/80926037
+	//旋转公式参考
+	//https://blog.csdn.net/wishchin/article/details/80926037
+	//其中sin（angle）项前面为+时，逆时针转，为-时顺时针转
 	outnor[0] = nor[0] * cos(angle) + (axles[1] * nor[2] - axles[2] * nor[1])*sin(angle)
 		+ axles[0] * finalD;
 	outnor[1] = nor[1] * cos(angle) + (axles[2] * nor[0] - axles[0] * nor[2])*sin(angle)
 		+ axles[1] * finalD;
 	outnor[2] = nor[2] * cos(angle) + (axles[0] * nor[1] - axles[1] * nor[0])*sin(angle)
 		+ axles[2] * finalD;
+	//outnor[0] = nor[0] * cos(angle) - (axles[1] * nor[2] - axles[2] * nor[1])*sin(angle)
+	//	+ axles[0] * finalD;
+	//outnor[1] = nor[1] * cos(angle) - (axles[2] * nor[0] - axles[0] * nor[2])*sin(angle)
+	//	+ axles[1] * finalD;
+	//outnor[2] = nor[2] * cos(angle) - (axles[0] * nor[1] - axles[1] * nor[0])*sin(angle)
+	//	+ axles[2] * finalD;
 }

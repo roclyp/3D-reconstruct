@@ -1,4 +1,4 @@
-#include "PCLlibrary.h"
+ï»¿#include "PCLlibrary.h"
 #include <iostream>
 #include <string>
 #include <pcl/console/time.h>   // TicToc
@@ -45,18 +45,18 @@ typedef pcl::PointCloud<pcl::PointXYZ>::Ptr PointXYZPtr;
 //
 //	pcl::NormalEstimation<pcl::PointXYZRGB, pcl::Normal> n;
 //	pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
-//	//»ñµÃKÁìÓòµã
+//	//è·å¾—Ké¢†åŸŸç‚¹
 //	pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGB>);
 //	//pcl::KdTreeFLANN<pcl::PointXYZRGB>::Ptr tree(pcl::KdTreeFLANN<pcl::PointXYZRGB>);
 //	tree->setInputCloud(cloud_IN);
 //	n.setInputCloud(cloud_IN);
 //	n.setSearchMethod(tree);
 //	n.setKSearch(10);
-//	//¿ªÊ¼½øĞĞ·¨Ïò¼ÆËã
+//	//å¼€å§‹è¿›è¡Œæ³•å‘è®¡ç®—
 //	n.compute(*normals);
 //
 //	
-//	//ÏÔÊ¾
+//	//æ˜¾ç¤º
 //	int v1(0), v2(1);
 //	viewer->createViewPort(0.0, 0.0, 0.5, 1.0, v1);
 //	viewer->createViewPort(0.5, 0.0, 1.0, 1.0, v2);
@@ -67,7 +67,7 @@ typedef pcl::PointCloud<pcl::PointXYZ>::Ptr PointXYZPtr;
 //
 //
 //	////viewer->addPolygonMesh(meshin, "my2");
-//	////viewer->setRepresentationToWireframeForAllActors(); //Íø¸ñÄ£ĞÍÒÔÏß¿òÍ¼Ä£Ê½ÏÔÊ¾
+//	////viewer->setRepresentationToWireframeForAllActors(); //ç½‘æ ¼æ¨¡å‹ä»¥çº¿æ¡†å›¾æ¨¡å¼æ˜¾ç¤º
 //	//DWORD Start = ::GetTickCount();
 //
 //	//for (int i = 0; i < cloud_IN->size(); i++) {
@@ -117,7 +117,7 @@ typedef pcl::PointCloud<pcl::PointXYZ>::Ptr PointXYZPtr;
 //main(int argc, char*argv[])
 //{
 //
-//	// ¶ÁÈëµãÔÆÎÄ¼ş  
+//	// è¯»å…¥ç‚¹äº‘æ–‡ä»¶  
 //	
 //	pcl::PointCloud<PointXYZRGB>::Ptr cloudin(new pcl::PointCloud<PointXYZRGB>);
 //	pcl::PointCloud<PointXYZI>::Ptr cloud(new pcl::PointCloud<PointXYZI>);
@@ -135,7 +135,7 @@ typedef pcl::PointCloud<pcl::PointXYZ>::Ptr PointXYZPtr;
 //		cloud->push_back(temppoint);
 //	}
 //
-//	// ½¨Á¢kdtree  
+//	// å»ºç«‹kdtree  
 //	//pcl::KdTreeFLANN<PointXYZ>::Ptr tree1(new pcl::KdTreeFLANN<PointXYZ>);
 //	pcl::search::KdTree<PointXYZI>::Ptr tree1(new pcl::search::KdTree<PointXYZI>);
 //	pcl::BilateralFilter<PointXYZI>::Ptr bf;
@@ -146,7 +146,7 @@ typedef pcl::PointCloud<pcl::PointXYZ>::Ptr PointXYZPtr;
 //	bf->filter(outcloud);
 //
 //
-//	// ±£´æÂË²¨Êä³öµãÔÆÎÄ¼ş  
+//	// ä¿å­˜æ»¤æ³¢è¾“å‡ºç‚¹äº‘æ–‡ä»¶  
 //	pcl::io::savePCDFile("C:\\Users\\zhihong\\Desktop\\cup\\2018.11.21\\out\\shuangbian_1.pcd", outcloud);
 //	return (0);
 //}
@@ -196,7 +196,7 @@ typedef pcl::PointCloud<pcl::PointXYZ>::Ptr PointXYZPtr;
 //	return 0;
 //}
 
-//¶ÁÈ¡ÅäÖÃÎÄ¼ş
+//è¯»å–é…ç½®æ–‡ä»¶
 void ConfigFileRead(map<string, string>& m_mapConfigInfo)
 {
 	ifstream configFile;
@@ -208,7 +208,7 @@ void ConfigFileRead(map<string, string>& m_mapConfigInfo)
 		while (!configFile.eof())
 		{
 			getline(configFile, str_line);
-			if (str_line.find('#') == 0) //¹ıÂËµô×¢ÊÍĞÅÏ¢£¬¼´Èç¹ûÊ×¸ö×Ö·ûÎª#¾Í¹ıÂËµôÕâÒ»ĞĞ
+			if (str_line.find('#') == 0) //è¿‡æ»¤æ‰æ³¨é‡Šä¿¡æ¯ï¼Œå³å¦‚æœé¦–ä¸ªå­—ç¬¦ä¸º#å°±è¿‡æ»¤æ‰è¿™ä¸€è¡Œ
 			{
 				continue;
 			}
@@ -225,15 +225,15 @@ void ConfigFileRead(map<string, string>& m_mapConfigInfo)
 	}
 }
 
-//»ùÓÚ TOF Éî¶È´«¸ĞµÄÖ²ÎïÈıÎ¬µãÔÆÊı¾İ»ñÈ¡ÓëÈ¥Ôë·½·¨ÖĞµÄË«±ßÂË²¨
+//åŸºäº TOF æ·±åº¦ä¼ æ„Ÿçš„æ¤ç‰©ä¸‰ç»´ç‚¹äº‘æ•°æ®è·å–ä¸å»å™ªæ–¹æ³•ä¸­çš„åŒè¾¹æ»¤æ³¢
 
 //PointXYZRGB Bilateral_Filters(pcl::PointCloud<PointXYZRGB>::Ptr cloudin, pcl::PointCloud<pcl::Normal>::Ptr normalsin, vector<float> kdpointDis,
 //	float sigmac, float sigmas)
 //{
-//	PointXYZRGB oricloud = cloudin->at(0);//¼ÆËãµã
-//	Normal orinormal = normalsin->at(0);//¼ÆËãµã·¨ÏòÁ¿
-//	float sigmac2 = pow(sigmac, 2);//sigamcÆ½·½
-//	float sigmas2 = pow(sigmas, 2);//sigamsÆ½·½
+//	PointXYZRGB oricloud = cloudin->at(0);//è®¡ç®—ç‚¹
+//	Normal orinormal = normalsin->at(0);//è®¡ç®—ç‚¹æ³•å‘é‡
+//	float sigmac2 = pow(sigmac, 2);//sigamcå¹³æ–¹
+//	float sigmas2 = pow(sigmas, 2);//sigamså¹³æ–¹
 //	double up=0,down=0;
 //	double dis2 = (oricloud.x - cloudin->at(1).x)*(oricloud.x - cloudin->at(1).x) +
 //		(oricloud.y - cloudin->at(1).y)*(oricloud.y - cloudin->at(1).y) +
@@ -242,17 +242,17 @@ void ConfigFileRead(map<string, string>& m_mapConfigInfo)
 //	for (int i = 1; i < cloudin->size(); i++)
 //	{
 //		Normal Jnormal = normalsin->at(i);
-//		double pi_jx = (oricloud.x - cloudin->at(i).x);//pi-pjµÄx
-//		double pi_jy = (oricloud.y - cloudin->at(i).y);//pi-pjµÄy
-//		double pi_jz = (oricloud.z - cloudin->at(i).z);//pi-pjµÄz
-//		double norx = orinormal.normal_x ;//·¨ÏßµÄx
-//		double nory = orinormal.normal_y ;//·¨ÏßµÄy
-//		double norz = orinormal.normal_z ;//·¨ÏßµÄz
+//		double pi_jx = (oricloud.x - cloudin->at(i).x);//pi-pjçš„x
+//		double pi_jy = (oricloud.y - cloudin->at(i).y);//pi-pjçš„y
+//		double pi_jz = (oricloud.z - cloudin->at(i).z);//pi-pjçš„z
+//		double norx = orinormal.normal_x ;//æ³•çº¿çš„x
+//		double nory = orinormal.normal_y ;//æ³•çº¿çš„y
+//		double norz = orinormal.normal_z ;//æ³•çº¿çš„z
 //
-//		double x2 = pow(kdpointDis.at(i), 2);//Å·ÊÏ¾àÀëÆ½·½
-//		double y2 = pow((pi_jx * norx + pi_jy * nory + pi_jz * norz)/(pi_jz * norz), 2);//ÏòÁ¿ÄÚ»ıµÄÆ½·½
-//		double Wc = exp(-x2 / (2 * sigmac2));//Wc,¹âË³ÂË²¨È¨ÖØº¯Êı£»
-//		double Ws = exp(-y2 / (2 * sigmas2));//Ws,ÌØÕ÷±£³ÖÈ¨ÖØº¯Êı£»
+//		double x2 = pow(kdpointDis.at(i), 2);//æ¬§æ°è·ç¦»å¹³æ–¹
+//		double y2 = pow((pi_jx * norx + pi_jy * nory + pi_jz * norz)/(pi_jz * norz), 2);//å‘é‡å†…ç§¯çš„å¹³æ–¹
+//		double Wc = exp(-x2 / (2 * sigmac2));//Wc,å…‰é¡ºæ»¤æ³¢æƒé‡å‡½æ•°ï¼›
+//		double Ws = exp(-y2 / (2 * sigmas2));//Ws,ç‰¹å¾ä¿æŒæƒé‡å‡½æ•°ï¼›
 //		up += Wc * Ws*(pi_jx * Jnormal.normal_x + pi_jy * Jnormal.normal_y + pi_jz * Jnormal.normal_z);
 //		down += Wc * Ws;
 //	}
@@ -265,18 +265,18 @@ void ConfigFileRead(map<string, string>& m_mapConfigInfo)
 //	return newpoint;
 //}
 
-//The Bilateral Filter for Point CloudsÖĞË«±ßÂË²¨
+//The Bilateral Filter for Point Cloudsä¸­åŒè¾¹æ»¤æ³¢
 PointXYZRGB Bilateral_Filters(pcl::PointCloud<PointXYZRGB>::Ptr cloudin, pcl::PointCloud<pcl::Normal>::Ptr normalsin, vector<float> kdpointDis,
 	float sigmac, float sigmas)
 {
-	PointXYZRGB oricloud = cloudin->at(0);//¼ÆËãµã
-	Normal orinormal = normalsin->at(0);//¼ÆËãµã·¨ÏòÁ¿
-	double norx = orinormal.normal_x;//·¨ÏßµÄx
-	double nory = orinormal.normal_y;//·¨ÏßµÄy
-	double norz = orinormal.normal_z;//·¨ÏßµÄz
+	PointXYZRGB oricloud = cloudin->at(0);//è®¡ç®—ç‚¹
+	Normal orinormal = normalsin->at(0);//è®¡ç®—ç‚¹æ³•å‘é‡
+	double norx = orinormal.normal_x;//æ³•çº¿çš„x
+	double nory = orinormal.normal_y;//æ³•çº¿çš„y
+	double norz = orinormal.normal_z;//æ³•çº¿çš„z
 	
-	float sigmac2 = pow(sigmac, 2);//sigamcÆ½·½
-	float sigmas2 = pow(sigmas, 2);//sigamsÆ½·½
+	float sigmac2 = pow(sigmac, 2);//sigamcå¹³æ–¹
+	float sigmas2 = pow(sigmas, 2);//sigamså¹³æ–¹
 	double up = 0, down = 0;
 	double dis2 = (oricloud.x - cloudin->at(1).x)*(oricloud.x - cloudin->at(1).x) +
 		(oricloud.y - cloudin->at(1).y)*(oricloud.y - cloudin->at(1).y) +
@@ -285,16 +285,16 @@ PointXYZRGB Bilateral_Filters(pcl::PointCloud<PointXYZRGB>::Ptr cloudin, pcl::Po
 	for (int i = 1; i < cloudin->size(); i++)
 	{
 		Normal Jnormal = normalsin->at(i);
-		double pi_jx = (oricloud.x - cloudin->at(i).x);//pi-pjµÄx
-		double pi_jy = (oricloud.y - cloudin->at(i).y);//pi-pjµÄy
-		double pi_jz = (oricloud.z - cloudin->at(i).z);//pi-pjµÄz
+		double pi_jx = (oricloud.x - cloudin->at(i).x);//pi-pjçš„x
+		double pi_jy = (oricloud.y - cloudin->at(i).y);//pi-pjçš„y
+		double pi_jz = (oricloud.z - cloudin->at(i).z);//pi-pjçš„z
 
 		double dd = kdpointDis.at(i);
-		double dd2 = pow(kdpointDis.at(i), 2);//Å·ÊÏ¾àÀëÆ½·½
+		double dd2 = pow(kdpointDis.at(i), 2);//æ¬§æ°è·ç¦»å¹³æ–¹
 		double dn = (pi_jx * norx + pi_jy * nory + pi_jz * norz);// (pi_jz * norz);
-		double dn2 = pow((pi_jx * norx + pi_jy * nory + pi_jz * norz), 2);//ÏòÁ¿ÄÚ»ıµÄÆ½·½
-		double Wc = exp(-dd2 / (2 * sigmac2));//Wc,¹âË³ÂË²¨È¨ÖØº¯Êı£»
-		double Ws = exp(-dn2 / (2 * sigmas2));//Ws,ÌØÕ÷±£³ÖÈ¨ÖØº¯Êı£»
+		double dn2 = pow((pi_jx * norx + pi_jy * nory + pi_jz * norz), 2);//å‘é‡å†…ç§¯çš„å¹³æ–¹
+		double Wc = exp(-dd2 / (2 * sigmac2));//Wc,å…‰é¡ºæ»¤æ³¢æƒé‡å‡½æ•°ï¼›
+		double Ws = exp(-dn2 / (2 * sigmas2));//Ws,ç‰¹å¾ä¿æŒæƒé‡å‡½æ•°ï¼›
 		up += Wc * Ws * dn;
 		down += Wc * Ws;
 	}
@@ -332,7 +332,7 @@ int main()
 	cout << "Input Filepath: " << filepathCircle << endl;
 	cout << "Output FIlepath: " << outfilepathCircle << endl;
 
-	//Ñ­»·°æ±¾
+	//å¾ªç¯ç‰ˆæœ¬
 	vector<string> Allname;
 	vector< pcl::PointCloud<PointXYZRGB>::Ptr> AllCloud;
 	GetAllFiles_CertainFormat(filepathCircle,Allname,format);
@@ -345,7 +345,7 @@ int main()
 	}
 
 	
-	//µ¥¸öÎÄ¼ş°æ±¾
+	//å•ä¸ªæ–‡ä»¶ç‰ˆæœ¬
 	//pcl::PointCloud<PointXYZRGB>::Ptr cloudin(new pcl::PointCloud<PointXYZRGB>);
 	////pcl::io::loadPCDFile("C:\\Users\\zhihong\\Desktop\\2\\2\\A619-T-3_side29pcd.pcd", *cloud);
 	//pcl::io::loadPCDFile(filepath, *cloudin);
@@ -360,7 +360,7 @@ int main()
 		cloudin = AllCloud.at(id);
 		vector<int>kdpointID(k+1);
 		vector<float>kdpointDis(k+1);
-		// ½¨Á¢kdtree  
+		// å»ºç«‹kdtree  
 		pcl::search::KdTree<PointXYZRGB>::Ptr kdtree1(new pcl::search::KdTree<PointXYZRGB>);
 		pcl::NormalEstimation<pcl::PointXYZRGB, pcl::Normal> n;
 		pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
@@ -368,11 +368,11 @@ int main()
 		if (kdtreeRadiusOrNum == "Num")
 		{
 			kdtree1->setInputCloud(cloudin);
-			//¼ÆËãÃ¿¸öµã·¨ÏòÁ¿
+			//è®¡ç®—æ¯ä¸ªç‚¹æ³•å‘é‡
 			n.setInputCloud(cloudin);
-			//µãÔÆ·¨Ïò¼ÆËãÊ±£¬ĞèÒªËùËÑµÄ½üÁÚµã´óĞ¡
+			//ç‚¹äº‘æ³•å‘è®¡ç®—æ—¶ï¼Œéœ€è¦æ‰€æœçš„è¿‘é‚»ç‚¹å¤§å°
 			n.setKSearch(k);
-			//¿ªÊ¼½øĞĞ·¨Ïò¼ÆËã
+			//å¼€å§‹è¿›è¡Œæ³•å‘è®¡ç®—
 			n.compute(*normals);
 		}
 		else if(kdtreeRadiusOrNum == "Radius")
@@ -393,7 +393,7 @@ int main()
 			pcl::PointCloud<pcl::Normal>::Ptr tempnormals(new pcl::PointCloud<pcl::Normal>);
 			
 			if (kdtree1->nearestKSearch(cloudin->at(i), k+1, kdpointID, kdpointDis)) {
-				//tempcloudÖĞµÚÒ»¸öµãÎª¼ÆËãµã,tempnormalsµÚÒ»¸öÎª¼ÆËãµã·¨ÏòÁ¿
+				//tempcloudä¸­ç¬¬ä¸€ä¸ªç‚¹ä¸ºè®¡ç®—ç‚¹,tempnormalsç¬¬ä¸€ä¸ªä¸ºè®¡ç®—ç‚¹æ³•å‘é‡
 				int cc = i;
 				tempkdcloud->push_back(cloudin->at(i));
 				tempnormals->push_back(normals->at(i));
@@ -402,7 +402,7 @@ int main()
 				cloudin->at(i).b = 255;*/
 				for (int j = 1; j <= k; j++)
 				{
-					//¼ì²éÁìÓòµã
+					//æ£€æŸ¥é¢†åŸŸç‚¹
 					tempkdcloud->push_back(cloudin->at(kdpointID[j]));
 					tempnormals->push_back(normals->at(kdpointID[j]));
 				}

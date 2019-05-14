@@ -1,4 +1,4 @@
-#include "PCLlibrary.h"
+ï»¿#include "PCLlibrary.h"
 #include <iostream>
 #include <string>
 #include <pcl/console/time.h>   // TicToc
@@ -98,7 +98,7 @@ void ConfigFileRead(map<string, string>& m_mapConfigInfo)
 		while (!configFile.eof())
 		{
 			getline(configFile, str_line);
-			if (str_line.find('#') == 0) //¹ıÂËµô×¢ÊÍĞÅÏ¢£¬¼´Èç¹ûÊ×¸ö×Ö·ûÎª#¾Í¹ıÂËµôÕâÒ»ĞĞ
+			if (str_line.find('#') == 0) //è¿‡æ»¤æ‰æ³¨é‡Šä¿¡æ¯ï¼Œå³å¦‚æœé¦–ä¸ªå­—ç¬¦ä¸º#å°±è¿‡æ»¤æ‰è¿™ä¸€è¡Œ
 			{
 				continue;
 			}
@@ -140,7 +140,7 @@ bool NormalIsOk(pcl::PointCloud<pcl::PointXYZRGB>::Ptr tempcloud, float threshol
 	temp_normals = cloud_normals;
 	if (angle > 90)
 		angle = 180 - angle;
-	if (comFlag == "Ğ¡")
+	if (comFlag == "å°")
 	{
 		if (angle <= threshold_angle)
 			return false;
@@ -174,7 +174,7 @@ int main()
 	string filepath=param["filepath"];
 	istringstream tempangle(param["threshold_angle"]);
 	float threshold_angle;
-	string comFlag = param["´óÓÚĞ¡ÓÚ"];
+	string comFlag = param["å¤§äºå°äº"];
 	tempangle >> threshold_angle;
 	pcl::PointXYZ pointViewer;
 	pointViewer.x = 0;

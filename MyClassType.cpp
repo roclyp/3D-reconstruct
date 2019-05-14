@@ -1,5 +1,71 @@
 ﻿#include "MyClassType.h"
 
+////open3d的FPFH粗配准
+//void FPFHRegister_open3d(std::shared_ptr<open3d::PointCloud> &cloud1,
+//	std::shared_ptr<open3d::PointCloud> &cloud2, Eigen::Matrix4f &outtrans,
+//	open3d::RegistrationResult &fpfhresult,
+//	double downsize = 0.003, double kdradius = 0.009, int kdnum = 50,double fastpara = 0.005)
+//{
+//	std::shared_ptr<open3d::PointCloud> cloud1down(new open3d::PointCloud);
+//	std::shared_ptr<open3d::PointCloud> cloud2down(new open3d::PointCloud);
+//	cloud1down = open3d::VoxelDownSample(*cloud1, downsize);
+//	cloud2down = open3d::VoxelDownSample(*cloud2, downsize);
+//
+//	open3d::EstimateNormals(*cloud1down, open3d::KDTreeSearchParamHybrid(kdradius, kdnum));
+//	open3d::EstimateNormals(*cloud2down, open3d::KDTreeSearchParamHybrid(kdradius, kdnum));
+//
+//	std::shared_ptr<open3d::Feature>  cloud1_fpfh(new open3d::Feature);
+//	std::shared_ptr<open3d::Feature>  cloud2_fpfh(new open3d::Feature);
+//	/*open3d::Feature cloud1_fpfh;
+//	open3d::Feature cloud2_fpfh;*/
+//	cloud1_fpfh = open3d::ComputeFPFHFeature(*cloud1down, open3d::KDTreeSearchParamHybrid(kdradius, kdnum));
+//	cloud2_fpfh = open3d::ComputeFPFHFeature(*cloud2down, open3d::KDTreeSearchParamHybrid(kdradius, kdnum));
+//
+//	open3d::RegistrationResult result =
+//		open3d::FastGlobalRegistration(*cloud2down, *cloud1down, *cloud2_fpfh, *cloud1_fpfh,
+//			open3d::FastGlobalRegistrationOption(1.4, false, true, fastpara, 64, 0.95, 1000));
+//			//open3d::FastGlobalRegistrationOption(fastpara));
+//	Eigen::Matrix4f transform = result.transformation_.cast<float>();
+//	outtrans = transform;
+//	fpfhresult = result;
+//}
+
+//open3d的FPFH粗配准
+void FPFHRegister_open3d(std::shared_ptr<open3d::PointCloud> &cloud1,
+	std::shared_ptr<open3d::PointCloud> &cloud2, Eigen::Matrix4f &outtrans,
+	std::shared_ptr<open3d::PointCloud> &cloud1down_nor,
+	std::shared_ptr<open3d::PointCloud> &cloud2down_nor,
+	open3d::RegistrationResult &fpfhresult,
+	double downsize = 0.003, double kdradius = 0.009, int kdnum = 50, double fastpara = 0.005)
+{
+	std::shared_ptr<open3d::PointCloud> cloud1down(new open3d::PointCloud);
+	std::shared_ptr<open3d::PointCloud> cloud2down(new open3d::PointCloud);
+	cloud1down = open3d::VoxelDownSample(*cloud1, downsize);
+	cloud2down = open3d::VoxelDownSample(*cloud2, downsize);
+
+	open3d::EstimateNormals(*cloud1down, open3d::KDTreeSearchParamHybrid(kdradius, kdnum));
+	open3d::EstimateNormals(*cloud2down, open3d::KDTreeSearchParamHybrid(kdradius, kdnum));
+
+	std::shared_ptr<open3d::Feature>  cloud1_fpfh(new open3d::Feature);
+	std::shared_ptr<open3d::Feature>  cloud2_fpfh(new open3d::Feature);
+	/*open3d::Feature cloud1_fpfh;
+	open3d::Feature cloud2_fpfh;*/
+	cloud1_fpfh = open3d::ComputeFPFHFeature(*cloud1down, open3d::KDTreeSearchParamHybrid(kdradius, kdnum));
+	cloud2_fpfh = open3d::ComputeFPFHFeature(*cloud2down, open3d::KDTreeSearchParamHybrid(kdradius, kdnum));
+
+	open3d::RegistrationResult result =
+		open3d::FastGlobalRegistration(*cloud2down, *cloud1down, *cloud2_fpfh, *cloud1_fpfh,
+			open3d::FastGlobalRegistrationOption(1.4, false, true, fastpara, 64, 0.95, 1000));
+	//open3d::FastGlobalRegistrationOption(fastpara));
+	Eigen::Matrix4f transform = result.transformation_.cast<float>();
+	outtrans = transform;
+	fpfhresult = result;
+	cloud1down_nor = cloud1down;
+	cloud2down_nor = cloud2down;
+}
+
+
+
 //降采样
 void downsampling(const PointCloud<PointXYZRGB>::Ptr &cloudin, PointCloud<PointXYZRGB>::Ptr &outpoint, double &leafsize)
 {
@@ -64,7 +130,9 @@ void ICPregister(const PointCloud<PointXYZRGB>::Ptr &cloud1, const PointCloud<Po
 	pcl::NormalEstimation<pcl::PointXYZRGB, pcl::PointNormal> norm_est;
 	pcl::search::KdTree<pcl::PointXYZRGB>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZRGB>);
 	norm_est.setSearchMethod(tree);
-	norm_est.setKSearch(para.Kicp);
+	int num = para.Kicp;
+	cout << num << endl;
+	norm_est.setKSearch(num);
 
 	norm_est.setInputCloud(cloud2);
 	norm_est.compute(*points_with_normals_cloud2);
@@ -190,17 +258,18 @@ void getNeiborTriangle(CloudCenVers &cloudCenVer2, const CloudCenVers &cloudCenV
 	PointCloud<PointXYZ>::Ptr cloud1(new PointCloud<PointXYZ>);
 	CloudCenVers2Pcloud(cloudCenVer2, cloud2);
 	CloudCenVers2Pcloud(cloudCenVer1, cloud1);
-	
+
 	//此时，三角面片中心点在中心点云中的序号与在mesh中的polygon的序号是一致的
+			//kdtree搜索点云2中三角面中心点c(i)在点云1中的邻近点，然后将该若干三角面片记录到点云2
+	pcl::KdTreeFLANN<pcl::PointXYZ>::Ptr tree(new pcl::KdTreeFLANN<pcl::PointXYZ>);
+	tree->setInputCloud(cloud1);
+
 	omp_set_num_threads(8);
 #pragma omp parallel for
 	for (int i = 0; i < cloud2->size(); i++)
 	{
-		//kdtree搜索点云2中三角面中心点c(i)在点云1中的邻近点，然后将该若干三角面片记录到点云2中
 		std::vector<int> kdID;
 		std::vector<float> kddis;
-		pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
-		tree->setInputCloud(cloud1);
 		if (tree->radiusSearch(cloud2->at(i), para.SearchRadius, kdID, kddis) > 0)
 		{
 			for (int j = 0; j < kdID.size(); j++)
@@ -271,302 +340,7 @@ void TriCross(CloudCenVers &cloudCenVer2, PointCloud<PointXYZRGB>::Ptr &cloud2tr
 	}
 }
 
-//处理三角面片DealWithTri三个一起处理
-void DealWithTri(CloudCenVers &cloudCenVer2, PointCloud<PointXYZRGB>::Ptr &cloud2trans,
-	PointCloud<PointXYZRGB>::Ptr &cloud1, PointCloud<PointXYZRGB>::Ptr &outcloud,
-	PointCloud<PointXYZRGB>::Ptr &cross2Cloud, PointCloud<PointXYZRGB>::Ptr &cross1Cloud,
-	PointCloud<PointXYZRGB>::Ptr &parallelCloud, mypara &para)
-{
-	//先处理交叉的且在两边的
-	for (int i = 0; i < cloudCenVer2.interAll.size(); i++)
-	{
-		auto temp = cloudCenVer2.interAll.at(i);
-		if (temp.Cross2itervers.size() == 0)
-		{
-			//cout << "Triangle " << i << "has no 2 sides cross triangles" << endl;
-		}
-		else
-		{
-			for (int j = 0; j < temp.Cross2itervers.size(); j++)
-			{
-				auto temp2 = temp.Cross2itervers.at(j);
-				spaceLine crossLine;
-				PointXYZRGB cloud2p1 = cloud2trans->at(temp.vertices.vertices[0]);
-				PointXYZRGB cloud2p2 = cloud2trans->at(temp.vertices.vertices[1]);
-				PointXYZRGB cloud2p3 = cloud2trans->at(temp.vertices.vertices[2]);
-				PointXYZRGB cloud1p1 = cloud1->at(temp2.vertices[0]);
-				PointXYZRGB cloud1p2 = cloud1->at(temp2.vertices[1]);
-				PointXYZRGB cloud1p3 = cloud1->at(temp2.vertices[2]);
-				spacePlane plane2(cloud2p1, cloud2p2, cloud2p3);
-				spacePlane plane1(cloud1p1, cloud1p2, cloud1p3);
-				spacePlane outplane;
-				//获得旋转角度的两倍，相交线，以及中值平面
-				double doubleangle = getAngle(plane2, plane1, outplane, crossLine);
-				//将点云2投影至中值平面
-				PointXYZRGB adjustC2p1, adjustC2p2, adjustC2p3;
-				if (getAdjustPoint(cloud2p1, outplane, adjustC2p1, para.Tthrehold) == true)
-					outcloud->push_back(adjustC2p1);
-				if (getAdjustPoint(cloud2p2, outplane, adjustC2p2, para.Tthrehold) == true)
-					outcloud->push_back(adjustC2p2);
-				if (getAdjustPoint(cloud2p3, outplane, adjustC2p3, para.Tthrehold) == true)
-					outcloud->push_back(adjustC2p3);
-			}
-		}
-		if (temp.Cross1itervers.size() == 0)
-		{
-			//cout << "Triangle " << i << "has no 1 sides cross triangles" << endl;
-		}
-		else
-		{
-			for (int j = 0; j < temp.Cross1itervers.size(); j++)
-			{
-				auto temp2 = temp.Cross1itervers.at(j);
-				spaceLine crossLine;
-				PointXYZRGB cloud2p1 = cloud2trans->at(temp.vertices.vertices[0]);
-				PointXYZRGB cloud2p2 = cloud2trans->at(temp.vertices.vertices[1]);
-				PointXYZRGB cloud2p3 = cloud2trans->at(temp.vertices.vertices[2]);
-				PointXYZRGB cloud1p1 = cloud1->at(temp2.vertices[0]);
-				PointXYZRGB cloud1p2 = cloud1->at(temp2.vertices[1]);
-				PointXYZRGB cloud1p3 = cloud1->at(temp2.vertices[2]);
-				spacePlane plane2(cloud2p1, cloud2p2, cloud2p3);
-				spacePlane plane1(cloud1p1, cloud1p2, cloud1p3);
-				spacePlane outplane;
-				//获得旋转角度的两倍，相交线，以及中值平面
-				double doubleangle = getAngle(plane2, plane1, outplane, crossLine);
-				//将点云2投影至中值平面
-				PointXYZRGB adjustC2p1, adjustC2p2, adjustC2p3;
-				if (getAdjustPoint(cloud2p1, outplane, adjustC2p1, para.Tthrehold) == true)
-					outcloud->push_back(adjustC2p1);
-				if (getAdjustPoint(cloud2p2, outplane, adjustC2p2, para.Tthrehold) == true)
-					outcloud->push_back(adjustC2p2);
-				if (getAdjustPoint(cloud2p3, outplane, adjustC2p3, para.Tthrehold) == true)
-					outcloud->push_back(adjustC2p3);
-			}
-		}
-		if (temp.Parallitervers.size() == 0)
-		{
-			//cout << "Triangle " << i << "has no parallel triangles" << endl;
-		}
-		else
-		{
-			for (int j = 0; j < temp.Parallitervers.size(); j++)
-			{
-				auto temp2 = temp.Parallitervers.at(j);
-				spaceLine crossLine;
-				PointXYZRGB cloud2p1 = cloud2trans->at(temp.vertices.vertices[0]);
-				PointXYZRGB cloud2p2 = cloud2trans->at(temp.vertices.vertices[1]);
-				PointXYZRGB cloud2p3 = cloud2trans->at(temp.vertices.vertices[2]);
-				PointXYZRGB cloud1p1 = cloud1->at(temp2.vertices[0]);
-				PointXYZRGB cloud1p2 = cloud1->at(temp2.vertices[1]);
-				PointXYZRGB cloud1p3 = cloud1->at(temp2.vertices[2]);
-				spacePlane plane2(cloud2p1, cloud2p2, cloud2p3);
-				spacePlane plane1(cloud1p1, cloud1p2, cloud1p3);
-				spacePlane outplane;
-				//获得平行片面的中直面
-				outplane.A = (plane1.A + plane2.A)*1.0 / 2;
-				outplane.B = (plane1.B + plane2.B)*1.0 / 2;
-				outplane.C = (plane1.C + plane2.C)*1.0 / 2;
-				outplane.D = (plane1.D + plane2.D)*1.0 / 2;
-				//将点云2投影至中值平面
-				PointXYZRGB adjustC2p1, adjustC2p2, adjustC2p3;
-				if (getAdjustPoint(cloud2p1, outplane, adjustC2p1, para.Tthrehold) == true)
-					outcloud->push_back(adjustC2p1);
-				if (getAdjustPoint(cloud2p2, outplane, adjustC2p2, para.Tthrehold) == true)
-					outcloud->push_back(adjustC2p2);
-				if (getAdjustPoint(cloud2p3, outplane, adjustC2p3, para.Tthrehold) == true)
-					outcloud->push_back(adjustC2p3);
-			}
-		}
-	}
-	
-}
 
-
-//给邻近三角面片排序
-void sortDueDis(vector<pcl::Vertices> &vers, vector<double> &dis)
-{
-	for (int i = 0; i < vers.size(); i++)
-	{
-		for (int j = i+1; j < vers.size(); j++)
-		{
-			if (dis.at(i) >= dis.at(j))
-			{
-				swap(vers.at(i), vers.at(j));
-				swap(dis.at(i), dis.at(j));
-			}
-		}
-	}
-}
-
-//分别处理，处理相交两侧的
-void DealCross2cLoud(CloudCenVers &cloudCenVer2, PointCloud<PointXYZRGB>::Ptr &cloud2trans,
-	PointCloud<PointXYZRGB>::Ptr &cloud1, PointCloud<PointXYZRGB>::Ptr &outcloud,
-	PointCloud<PointXYZRGB>::Ptr &cross2Cloud, mypara &para)
-{
-	for (int i = 0; i < cloudCenVer2.interAll.size(); i++)
-	{
-
-		auto temp = cloudCenVer2.interAll.at(i);
-		if (temp.Cross2itervers.size() == 0)
-		{
-			//cout << "Triangle " << i << "has no 2 sides cross triangles" << endl;
-		}
-		else
-		{
-			//处理前先根据欧氏距离对每个三角名片的邻近三角面片进行排序
-			sortDueDis(temp.Cross2itervers,temp.Cross2dis);
-			int dealnum;
-			if (temp.Cross2itervers.size() >= 3)
-				dealnum = 3;
-			else
-				dealnum = temp.Cross2itervers.size();
-			//开始处理
-			for (int j = 0; j < dealnum; j++)
-			{
-				auto temp2 = temp.Cross2itervers.at(j);
-				spaceLine crossLine;
-				PointXYZRGB cloud2p1 = cloud2trans->at(temp.vertices.vertices[0]);
-				PointXYZRGB cloud2p2 = cloud2trans->at(temp.vertices.vertices[1]);
-				PointXYZRGB cloud2p3 = cloud2trans->at(temp.vertices.vertices[2]);
-				PointXYZRGB cloud1p1 = cloud1->at(temp2.vertices[0]);
-				PointXYZRGB cloud1p2 = cloud1->at(temp2.vertices[1]);
-				PointXYZRGB cloud1p3 = cloud1->at(temp2.vertices[2]);
-				spacePlane plane2(cloud2p1, cloud2p2, cloud2p3);
-				spacePlane plane1(cloud1p1, cloud1p2, cloud1p3);
-				spacePlane outplane;
-				//获得旋转角度的两倍，相交线，以及中值平面
-				double doubleangle = getAngle(plane2, plane1, outplane, crossLine);
-				//将点云2投影至中值平面
-				PointXYZRGB adjustC2p1, adjustC2p2, adjustC2p3;
-				if (getAdjustPoint(cloud2p1, outplane, adjustC2p1, para.Tthrehold) == true)
-					outcloud->push_back(adjustC2p1);
-				if (getAdjustPoint(cloud2p2, outplane, adjustC2p2, para.Tthrehold) == true)
-					outcloud->push_back(adjustC2p2);
-				if (getAdjustPoint(cloud2p3, outplane, adjustC2p3, para.Tthrehold) == true)
-					outcloud->push_back(adjustC2p3);
-			}
-		}
-	}
-}
-
-//分别处理，处理相交同侧的
-void DealCross1cLoud(CloudCenVers &cloudCenVer2, PointCloud<PointXYZRGB>::Ptr &cloud2trans,
-	PointCloud<PointXYZRGB>::Ptr &cloud1, PointCloud<PointXYZRGB>::Ptr &outcloud,
-	PointCloud<PointXYZRGB>::Ptr &ross1Cloud, mypara &para)
-{
-	for (int i = 0; i < cloudCenVer2.interAll.size(); i++)
-	{
-		auto temp = cloudCenVer2.interAll.at(i);
-		if (temp.Cross1itervers.size() == 0)
-		{
-			//cout << "Triangle " << i << "has no 1 sides cross triangles" << endl;
-		}
-		else
-		{
-			for (int j = 0; j < temp.Cross1itervers.size(); j++)
-			{
-				auto temp2 = temp.Cross1itervers.at(j);
-				spaceLine crossLine;
-				PointXYZRGB cloud2p1 = cloud2trans->at(temp.vertices.vertices[0]);
-				PointXYZRGB cloud2p2 = cloud2trans->at(temp.vertices.vertices[1]);
-				PointXYZRGB cloud2p3 = cloud2trans->at(temp.vertices.vertices[2]);
-				PointXYZRGB cloud1p1 = cloud1->at(temp2.vertices[0]);
-				PointXYZRGB cloud1p2 = cloud1->at(temp2.vertices[1]);
-				PointXYZRGB cloud1p3 = cloud1->at(temp2.vertices[2]);
-				spacePlane plane2(cloud2p1, cloud2p2, cloud2p3);
-				spacePlane plane1(cloud1p1, cloud1p2, cloud1p3);
-				spacePlane outplane;
-				//获得旋转角度的两倍，相交线，以及中值平面
-				double doubleangle = getAngle(plane2, plane1, outplane, crossLine);
-				//将点云2投影至中值平面
-				PointXYZRGB adjustC2p1, adjustC2p2, adjustC2p3;
-				if (getAdjustPoint(cloud2p1, outplane, adjustC2p1, para.Tthrehold) == true)
-					outcloud->push_back(adjustC2p1);
-				if (getAdjustPoint(cloud2p2, outplane, adjustC2p2, para.Tthrehold) == true)
-					outcloud->push_back(adjustC2p2);
-				if (getAdjustPoint(cloud2p3, outplane, adjustC2p3, para.Tthrehold) == true)
-					outcloud->push_back(adjustC2p3);
-			}
-		}
-	
-	}
-}
-
-//分别处理，处理平行的
-void DealParalledcLoud(CloudCenVers &cloudCenVer2, PointCloud<PointXYZRGB>::Ptr &cloud2trans,
-	PointCloud<PointXYZRGB>::Ptr &cloud1, PointCloud<PointXYZRGB>::Ptr &outcloud,
-	PointCloud<PointXYZRGB>::Ptr &parallelCloud, mypara &para)
-{
-	for (int i = 0; i < cloudCenVer2.interAll.size(); i++)
-	{
-		auto temp = cloudCenVer2.interAll.at(i);
-		if (temp.Parallitervers.size() == 0)
-		{
-			//cout << "Triangle " << i << "has no parallel triangles" << endl;
-		}
-		else
-		{
-			for (int j = 0; j < temp.Parallitervers.size(); j++)
-			{
-				auto temp2 = temp.Parallitervers.at(j);
-				spaceLine crossLine;
-				PointXYZRGB cloud2p1 = cloud2trans->at(temp.vertices.vertices[0]);
-				PointXYZRGB cloud2p2 = cloud2trans->at(temp.vertices.vertices[1]);
-				PointXYZRGB cloud2p3 = cloud2trans->at(temp.vertices.vertices[2]);
-				PointXYZRGB cloud1p1 = cloud1->at(temp2.vertices[0]);
-				PointXYZRGB cloud1p2 = cloud1->at(temp2.vertices[1]);
-				PointXYZRGB cloud1p3 = cloud1->at(temp2.vertices[2]);
-				spacePlane plane2(cloud2p1, cloud2p2, cloud2p3);
-				spacePlane plane1(cloud1p1, cloud1p2, cloud1p3);
-				spacePlane outplane;
-				//获得平行片面的中直面
-				outplane.A = (plane1.A + plane2.A)*1.0 / 2;
-				outplane.B = (plane1.B + plane2.B)*1.0 / 2;
-				outplane.C = (plane1.C + plane2.C)*1.0 / 2;
-				outplane.D = (plane1.D + plane2.D)*1.0 / 2;
-				//将点云2投影至中值平面
-				PointXYZRGB adjustC2p1, adjustC2p2, adjustC2p3;
-				if (getAdjustPoint(cloud2p1, outplane, adjustC2p1, para.Tthrehold) == true)
-					outcloud->push_back(adjustC2p1);
-				if (getAdjustPoint(cloud2p2, outplane, adjustC2p2, para.Tthrehold) == true)
-					outcloud->push_back(adjustC2p2);
-				if (getAdjustPoint(cloud2p3, outplane, adjustC2p3, para.Tthrehold) == true)
-					outcloud->push_back(adjustC2p3);
-			}
-		}
-	}
-}
-
-
-bool getAdjustPoint(PointXYZRGB &p1, spacePlane &sp, PointXYZRGB &outpoint, double Tthrehold)
-{
-	spaceLine nor;
-	nor.dx = sp.A; nor.dy = sp.B; nor.dz = sp.C;
-	nor.x0 = p1.x; nor.y0 = p1.y; nor.z0 = p1.z;
-	if (nor.dx == 0 && nor.dy == 0 && nor.dz == 0)
-	{
-		cout << "The Normal of median Plane is Nan, Something is wrong!" << endl;
-		return false;
-	}
-	//x'=x0+dx*t,y'=y0+dy*t,z'=z0+dz*t, A*x'+B*y'+C*z'+D=0;
-	double standard = sp.A*sp.A + sp.B*sp.B + sp.C*sp.C;
-	double t = -(sp.A*nor.x0 + sp.B*nor.y0 + sp.C*nor.z0 + sp.D)*1.0 / standard;
-	if (t <= Tthrehold || t >= -Tthrehold)
-	{
-		outpoint.x = nor.x0 + nor.dx*t;
-		outpoint.y = nor.y0 + nor.dy*t;
-		outpoint.z = nor.z0 + nor.dz*t;
-		outpoint.r = p1.r;
-		outpoint.g = p1.g;
-		outpoint.b = p1.b;
-		return true;
-	}
-	else
-	{
-		cout << "Projected distance is over the threshold" << endl;
-		return false;
-	}
-}
 
 //bool getParallPoint(PointXYZRGB &p1, spacePlane &sp, PointXYZRGB &outpoint, double Tthrehold)
 //{
